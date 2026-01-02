@@ -26,10 +26,6 @@ A Next.js application that displays implementation guides from all repositories 
 
 Repositories to display are configured in `config/repos.ts`. Add repository names to the array to include them in the website.
 
-## Environment Variables
-
-Optional: `GITHUB_TOKEN` - GitHub personal access token to increase API rate limits (not required for public repositories).
-
 ## Project Structure
 
 ```
@@ -59,21 +55,6 @@ website/
 │   └── github.ts
 └── public/
 ```
-
-## Deployment
-
-This application is ready to deploy to Vercel. The build process will automatically:
-
-1. Fetch repositories from the `implement-from-scratch` organization
-2. Filter repositories listed in `config/repos.ts` that have a `docs` folder
-3. Generate static pages for all guides and chapters
-4. Use ISR with 1-hour revalidation for dynamic updates
-
-### Vercel Deployment
-
-1. Connect your GitHub repository to Vercel
-2. Add `GITHUB_TOKEN` as an environment variable (optional, for higher rate limits)
-3. Deploy - Vercel will automatically detect Next.js and configure the build
 
 ## How It Works
 
