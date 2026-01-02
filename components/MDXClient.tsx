@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { MDXRemote } from 'next-mdx-remote';
 import { MDXRemoteSerializeResult } from 'next-mdx-remote';
 
@@ -9,6 +9,62 @@ interface MDXClientProps {
   repoName: string;
   branch: string;
   skipFirstHeading?: boolean;
+}
+
+// Component for rendering code blocks with ASCII art support
+function CodeBlock({ children, className, ...props }: any) {
+  const [svgContent] = useState<string | null>(null);
+
+  // Extract code content
+  let codeContent = '';
+  let language = '';
+  
+  if (children && typeof children === 'object' && children.props) {
+    codeContent = children.props.children || '';
+    language = children.props.className?.replace('language-', '') || '';
+  } else if (typeof children === 'string') {
+    codeContent = children;
+  }
+
+  // Check if content looks like ASCII art
+  const isAsciiArt = typeof codeContent === 'string' && codeContent.length > 0 && (
+    codeContent.includes('┌') || codeContent.includes('│') || codeContent.includes('└') || 
+    codeContent.includes('─') || codeContent.includes('├') || codeContent.includes('┐') ||
+    codeContent.includes('┘') || codeContent.includes('┤') || codeContent.includes('┬') ||
+    codeContent.includes('┴') || codeContent.includes('╭') || codeContent.includes('╮') ||
+    codeContent.includes('╰') || codeContent.includes('╯') || codeContent.includes('═') ||
+    codeContent.includes('║') || codeContent.includes('╔') || codeContent.includes('╗') ||
+    codeContent.includes('╚') || codeContent.includes('╝') ||
+    (codeContent.split('\n').length > 3 && /[|\\\/\-_=+*#@$%^&(){}[\]]/.test(codeContent)) ||
+    language === 'ascii' || language === 'flowchart' || language === 'diagram'
+  );
+
+  // Note: ASCII-to-SVG conversion temporarily disabled due to aasvg compatibility issues
+  // ASCII art will be rendered as preformatted code blocks which preserves layout
+  // TODO: Re-enable when aasvg is compatible with Next.js client-side bundling
+
+  // If SVG conversion succeeded, return SVG
+  if (svgContent) {
+    return (
+      <div 
+        className="my-6 overflow-x-auto"
+        dangerouslySetInnerHTML={{ __html: svgContent }}
+      />
+    );
+  }
+
+  // Otherwise, return regular pre block
+  return (
+    <pre
+      className={`overflow-x-auto p-5 rounded-xl bg-[#0d1117] border border-[#262626] my-6 font-mono text-sm text-[#c9d1d9] shadow-lg ${
+        isAsciiArt ? 'whitespace-pre' : ''
+      } ${className || ''}`}
+      style={isAsciiArt ? { whiteSpace: 'pre', fontFamily: 'monospace' } : undefined}
+      {...props}
+    >
+      {children}
+    </pre>
+  );
 }
 
 export default function MDXClient({ source, repoName, branch, skipFirstHeading = false }: MDXClientProps) {
@@ -53,16 +109,7 @@ export default function MDXClient({ source, repoName, branch, skipFirstHeading =
         </code>
       );
     },
-    pre: ({ children, ...props }: any) => {
-      return (
-        <pre
-          className="overflow-x-auto p-5 rounded-xl bg-[#0d1117] border border-[#262626] my-6 font-mono text-sm text-[#c9d1d9] shadow-lg"
-          {...props}
-        >
-          {children}
-        </pre>
-      );
-    },
+    pre: CodeBlock,
     h1: ({ children, ...props }: any) => {
       return (
         <h1 className="mdx-h1 text-4xl font-bold mt-12 mb-6 first:mt-0 text-gray-900 dark:text-white" {...props}>

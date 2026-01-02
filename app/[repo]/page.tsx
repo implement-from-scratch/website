@@ -1,6 +1,7 @@
-import { getRepoInfo, getChapters, getFileContent } from '@/lib/github';
+import { getRepoInfo, getChapters, getFileContent, getMainReadme, parseDocsReadmeForRoadmapTree } from '@/lib/github';
 import { parseReadme } from '@/lib/readme-parser';
-import FlowDiagram from '@/components/FlowDiagram';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import GuideTabs from '@/components/GuideTabs';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -37,6 +38,23 @@ export default async function GuidePage({ params }: PageProps) {
       console.error(`Error fetching README for ${repoName}:`, error);
     }
 
+    // Fetch main README for Description tab
+    const mainReadme = await getMainReadme(repoName);
+
+    // Parse docs/README.md for roadmap tree
+    const roadmapTree = await parseDocsReadmeForRoadmapTree(repoName, readmeTitle);
+
+    // Render markdown content server-side
+    const descriptionContent = mainReadme ? (
+      <div className="prose prose-invert max-w-none">
+        <MarkdownRenderer
+          content={mainReadme}
+          repoName={repoName}
+          branch={repoInfo.default_branch}
+        />
+      </div>
+    ) : null;
+
     return (
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
@@ -57,7 +75,12 @@ export default async function GuidePage({ params }: PageProps) {
           )}
         </div>
 
-        <FlowDiagram chapters={chapters} repoName={repoName} />
+        {/* Tabbed Content */}
+        <GuideTabs
+          descriptionContent={descriptionContent}
+          roadmapTree={roadmapTree}
+          repoName={repoName}
+        />
       </div>
     );
   } catch (error) {
