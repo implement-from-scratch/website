@@ -1,4 +1,5 @@
 import { getRepoInfo, getFileContent, getChapters } from '@/lib/github';
+import { parseReadme } from '@/lib/readme-parser';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -33,6 +34,19 @@ export default async function ChapterPage({ params }: PageProps) {
       notFound();
     }
 
+    // Fetch and parse README for title
+    let repoTitle = repoName;
+    try {
+      const readmeContent = await getFileContent(repoName, 'README.md', repoInfo.default_branch);
+      if (readmeContent) {
+        const readmeData = parseReadme(readmeContent, repoName);
+        repoTitle = readmeData.title;
+      }
+    } catch (error) {
+      // Fallback to repo name if README fetch fails
+      console.error(`Error fetching README for ${repoName}:`, error);
+    }
+
     const chapterNumber = chapter.name.match(/^(\d+)/)?.[1] || '';
     const chapterTitle = chapter.name
       .replace(/^\d+[-_]?/, '')
@@ -61,7 +75,7 @@ export default async function ChapterPage({ params }: PageProps) {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to {repoName}
+            Back to {repoTitle}
           </Link>
           <div className="flex items-center gap-3 mb-4">
             {chapterNumber && (

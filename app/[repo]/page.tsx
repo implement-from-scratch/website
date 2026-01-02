@@ -1,4 +1,5 @@
-import { getRepoInfo, getChapters } from '@/lib/github';
+import { getRepoInfo, getChapters, getFileContent } from '@/lib/github';
+import { parseReadme } from '@/lib/readme-parser';
 import FlowDiagram from '@/components/FlowDiagram';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -20,6 +21,22 @@ export default async function GuidePage({ params }: PageProps) {
       getChapters(repoName),
     ]);
 
+    // Fetch and parse README for title and description
+    let readmeTitle = repoInfo.name;
+    let readmeDescription = repoInfo.description;
+    
+    try {
+      const readmeContent = await getFileContent(repoName, 'README.md', repoInfo.default_branch);
+      if (readmeContent) {
+        const readmeData = parseReadme(readmeContent, repoName);
+        readmeTitle = readmeData.title;
+        readmeDescription = readmeData.description || repoInfo.description;
+      }
+    } catch (error) {
+      // Fallback to repo name and description if README fetch fails
+      console.error(`Error fetching README for ${repoName}:`, error);
+    }
+
     return (
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
@@ -32,10 +49,10 @@ export default async function GuidePage({ params }: PageProps) {
             </svg>
             Back to guides
           </Link>
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-3">{repoInfo.name}</h1>
-          {repoInfo.description && (
+          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-3">{readmeTitle}</h1>
+          {readmeDescription && (
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              {repoInfo.description}
+              {readmeDescription}
             </p>
           )}
         </div>
