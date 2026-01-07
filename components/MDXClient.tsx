@@ -273,6 +273,18 @@ export default function MDXClient({ source, repoName, branch, skipFirstHeading =
     hr: ({ ...props }: any) => (
       <hr className="my-8 border-[#262626]" {...props} />
     ),
+    // Handle KaTeX error elements gracefully
+    span: ({ className, children, ...props }: any) => {
+      // KaTeX error spans have specific classes
+      if (className?.includes('katex-error')) {
+        return (
+          <span className={`${className} bg-red-900/20 border border-red-500/50 rounded px-2 py-1 text-red-400 text-sm`} {...props}>
+            {children}
+          </span>
+        );
+      }
+      return <span className={className} {...props}>{children}</span>;
+    },
   };
 
   return (

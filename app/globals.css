@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import 'katex/dist/katex.min.css';
 
 @tailwind base;
 @tailwind components;
@@ -139,4 +140,71 @@ html {
 
 .skip-first-heading .mdx-h1:first-of-type {
   display: none;
+}
+
+/* KaTeX Math Rendering Styles */
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  margin: 1.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.katex-display > .katex {
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
+  text-align: initial;
+}
+
+/* Dark mode adjustments for KaTeX */
+.dark .katex {
+  color: #e5e5e5;
+}
+
+.dark .katex .base {
+  color: #e5e5e5;
+}
+
+.dark .katex .mord {
+  color: #e5e5e5;
+}
+
+.dark .katex .mrel {
+  color: #e5e5e5;
+}
+
+.dark .katex .mop {
+  color: #e5e5e5;
+}
+
+.dark .katex .mbin {
+  color: #e5e5e5;
+}
+
+/* Ensure math doesn't break layout */
+.katex-display {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* KaTeX error styling */
+.katex-error {
+  color: #f87171 !important;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.dark .katex-error {
+  color: #fca5a5 !important;
+  background-color: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.4);
 }
