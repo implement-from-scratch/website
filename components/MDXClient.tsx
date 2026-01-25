@@ -14,41 +14,20 @@ interface MDXClientProps {
 // Component for rendering code blocks with ASCII art support and copy functionality
 function CodeBlock({ children, className, ...props }: React.HTMLAttributes<HTMLPreElement>) {
   const [copied, setCopied] = useState(false);
+  const preRef = useRef<HTMLPreElement>(null);
 
-  // Extract code content and language
-  let codeContent = '';
-  let language = '';
-  let filename = '';
-  
-  if (children && typeof children === 'object' && 'props' in children) {
-    const childProps = children.props as { children?: string; className?: string; 'data-filename'?: string };
-    codeContent = childProps.children || '';
-    const classNames = childProps.className || '';
-    language = classNames.replace('language-', '');
-    filename = childProps['data-filename'] || '';
-  } else if (typeof children === 'string') {
-    codeContent = children;
-  }
-
-  // Check if content looks like ASCII art
-  const isAsciiArt = typeof codeContent === 'string' && codeContent.length > 0 && (
-    // Box drawing characters
-    codeContent.includes('\u250C') || codeContent.includes('\u2502') || codeContent.includes('\u2514') || 
-    codeContent.includes('\u2500') || codeContent.includes('\u251C') || codeContent.includes('\u2510') ||
-    codeContent.includes('\u2518') || codeContent.includes('\u2524') || codeContent.includes('\u252C') ||
-    codeContent.includes('\u2534') || codeContent.includes('\u256D') || codeContent.includes('\u256E') ||
-    codeContent.includes('\u2570') || codeContent.includes('\u256F') || codeContent.includes('\u2550') ||
-    codeContent.includes('\u2551') || codeContent.includes('\u2554') || codeContent.includes('\u2557') ||
-    codeContent.includes('\u255A') || codeContent.includes('\u255D') ||
-    // ASCII art patterns with multiple lines
-    (codeContent.split('\n').length > 3 && /[|\\\/\-_=+*#@$%^&(){}[\]]/.test(codeContent)) ||
-    // Explicit language hints
-    language === 'ascii' || language === 'flowchart' || language === 'diagram' || language === 'art'
-  );
+  // Extract raw code content for copying
+  const getRawCode = () => {
+    if (preRef.current) {
+      return preRef.current.innerText || '';
+    }
+    return '';
+  };
 
   const handleCopy = async (): Promise<void> => {
+    const code = getRawCode();
     try {
-      await navigator.clipboard.writeText(codeContent);
+      await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -56,81 +35,31 @@ function CodeBlock({ children, className, ...props }: React.HTMLAttributes<HTMLP
     }
   };
 
-  // ASCII art rendering with enhanced styling
-  if (isAsciiArt) {
+  // rehype-pretty-code passes language via data-language
+  const language = (props as any)['data-language'] || '';
+  const filename = (props as any)['data-rehype-pretty-code-title'] || '';
+
+  // For Mermaid diagrams, rehype-mermaid transforms them into img or svg
+  // If children is an object and looks like Mermaid output, we just render it
+  if (className === 'mermaid') {
     return (
-      <figure className="my-8 group relative">
-        {/* Copy button for ASCII art */}
-        <button
-          onClick={handleCopy}
-          className="absolute top-3 right-3 p-2 rounded-md bg-gray-800/80 text-gray-400 hover:text-white hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10"
-          aria-label="Copy to clipboard"
-          type="button"
-        >
-          {copied ? (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          )}
-        </button>
-        <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0d1117] overflow-hidden shadow-lg">
-          {/* Header bar for ASCII diagrams */}
-          <div className="flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              {language || 'Diagram'}
-            </span>
-          </div>
-          <div className="p-4 overflow-x-auto">
-            <pre 
-              className="ascii-art-content font-mono text-xs md:text-sm leading-relaxed text-gray-800 dark:text-gray-100"
-              style={{ 
-                whiteSpace: 'pre', 
-                fontFamily: "'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', monospace",
-                tabSize: 4,
-              }}
-            >
-              {codeContent}
-            </pre>
-          </div>
-        </div>
-      </figure>
+      <div className="mermaid-container my-8 overflow-x-auto flex justify-center bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        {children}
+      </div>
     );
   }
 
-  // Regular code block rendering with copy button
+  // Detect if this is a rehype-pretty-code block
+  const isPrettyCode = typeof (props as any)['data-language'] !== 'undefined';
+
   return (
-    <div className="my-6 group relative">
-      {/* Header with language and copy button */}
-      {(language || filename) && (
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-b-0 border-gray-200 dark:border-[#262626] rounded-t-xl">
-          <div className="flex items-center gap-2">
-            {language && (
-              <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                {language}
-              </span>
-            )}
-            {filename && (
-              <>
-                <span className="text-gray-400 dark:text-gray-600">-</span>
-                <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">
-                  {filename}
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+    <div className={`group relative ${isPrettyCode ? 'my-0' : 'my-6'}`}>
       {/* Copy button */}
       <button
         onClick={handleCopy}
-        className="absolute top-2 right-2 p-2 rounded-md bg-gray-800/80 text-gray-400 hover:text-white hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10"
+        className="absolute top-3 right-3 p-2 rounded-md bg-gray-800/60 text-gray-400 hover:text-white hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-20 backdrop-blur-sm border border-gray-700/50"
         aria-label="Copy to clipboard"
         type="button"
-        style={{ top: language || filename ? '2.75rem' : '0.5rem' }}
       >
         {copied ? (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,9 +72,8 @@ function CodeBlock({ children, className, ...props }: React.HTMLAttributes<HTMLP
         )}
       </button>
       <pre
-        className={`overflow-x-auto p-5 bg-[#0d1117] border border-gray-200 dark:border-[#262626] font-mono text-sm text-[#c9d1d9] shadow-lg ${
-          language || filename ? 'rounded-b-xl rounded-t-none' : 'rounded-xl'
-        } ${className || ''}`}
+        ref={preRef}
+        className={`${className || ''}`}
         {...props}
       >
         {children}
@@ -153,6 +81,7 @@ function CodeBlock({ children, className, ...props }: React.HTMLAttributes<HTMLP
     </div>
   );
 }
+
 
 export default function MDXClient({ source, repoName, branch, skipFirstHeading = false }: MDXClientProps) {
   const firstHeadingSkipped = useRef(false);
@@ -187,6 +116,14 @@ export default function MDXClient({ source, repoName, branch, skipFirstHeading =
       );
     },
     code: ({ className, children, ...props }: any) => {
+      // Check if this is a block code element processed by rehype-pretty-code
+      // It typically adds 'data-language' or 'data-theme' to the code element
+      const isBlock = typeof props['data-language'] !== 'undefined' || typeof props['data-theme'] !== 'undefined';
+
+      if (isBlock) {
+        return <code className={className} {...props}>{children}</code>;
+      }
+
       return (
         <code
           className={`font-mono text-sm ${className || ''} bg-[#171717] text-[#e5e5e5] px-1.5 py-0.5 rounded border border-[#262626]`}

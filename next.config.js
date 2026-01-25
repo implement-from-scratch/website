@@ -21,6 +21,9 @@ const nextConfig = {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
   },
+  experimental: {
+    serverComponentsExternalPackages: ['rehype-mermaid', 'playwright', 'playwright-core'],
+  },
 }
 
 module.exports = nextConfig

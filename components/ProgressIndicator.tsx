@@ -55,7 +55,7 @@ export function ProgressIndicator({
         }
     }, [currentChapterIndex, completedChapters, storageKey, isHydrated]);
 
-    const completedCount = completedChapters.length;
+    const completedCount = currentChapterIndex + 1;
     const progressPercent = totalChapters > 0 ? (completedCount / totalChapters) * 100 : 0;
 
     return (
@@ -106,10 +106,10 @@ export function ProgressIndicator({
                             <div
                                 key={i}
                                 className={`flex-shrink-0 w-2 h-2 rounded-full transition-all duration-300 ${isCurrent
-                                        ? 'bg-blue-500 ring-2 ring-blue-300 dark:ring-blue-700 ring-offset-1 ring-offset-white dark:ring-offset-gray-900'
-                                        : isCompleted
-                                            ? 'bg-green-500 dark:bg-green-400'
-                                            : 'bg-gray-300 dark:bg-gray-600'
+                                    ? 'bg-blue-500 ring-2 ring-blue-300 dark:ring-blue-700 ring-offset-1 ring-offset-white dark:ring-offset-gray-900'
+                                    : isCompleted
+                                        ? 'bg-green-500 dark:bg-green-400'
+                                        : 'bg-gray-300 dark:bg-gray-600'
                                     }`}
                                 title={`Chapter ${i + 1}${isCurrent ? ' (current)' : isCompleted ? ' (completed)' : ''}`}
                             />
