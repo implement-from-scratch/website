@@ -1,6 +1,5 @@
 import { serialize } from 'next-mdx-remote/serialize';
 import rehypePrettyCode from 'rehype-pretty-code';
-import rehypeMermaid from 'rehype-mermaid';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import { MDXRemoteSerializeResult } from 'next-mdx-remote';
@@ -21,8 +20,8 @@ export async function MarkdownRenderer({ content, repoName, branch, skipFirstHea
     // Pre-process content to fix common LaTeX issues
     let processedContent = content;
 
-    // Protect code blocks from processing (except Mermaid which we want rehype-mermaid to find)
-    const codeBlockRegex = /```(?!mermaid)[\s\S]*?```/g;
+    // Protect code blocks from processing
+    const codeBlockRegex = /```[\s\S]*?```/g;
     const codeBlocks: string[] = [];
     let blockIndex = 0;
 
@@ -83,23 +82,6 @@ export async function MarkdownRenderer({ content, repoName, branch, skipFirstHea
               throwOnError: false,
               errorColor: '#cc0000',
               strict: false,
-            },
-          ],
-          [
-            rehypeMermaid,
-            {
-              strategy: 'img-svg',
-              mermaidConfig: {
-                theme: 'base',
-                themeVariables: {
-                  primaryColor: '#3b82f6',
-                  primaryTextColor: '#fff',
-                  primaryBorderColor: '#2563eb',
-                  lineColor: '#60a5fa',
-                  secondaryColor: '#1e40af',
-                  tertiaryColor: '#1d4ed8',
-                },
-              },
             },
           ],
           [

@@ -115,26 +115,21 @@ function CodeBlock({ children, className, ...props }: React.HTMLAttributes<HTMLP
   const language = (props as any)['data-language'] || '';
   const filename = (props as any)['data-rehype-pretty-code-title'] || '';
 
-  // For Mermaid diagrams
-  if (className === 'mermaid') {
-    // Try to extract mermaid code from children
-    let mermaidCode = '';
-    if (typeof children === 'string') {
-      mermaidCode = children.trim();
-    } else if (typeof children === 'object' && children !== null) {
-      const childArray = Array.isArray(children) ? children : [children];
-      mermaidCode = childArray
-        .map(c => {
-          if (typeof c === 'string') return c;
-          if (typeof c === 'object' && 'props' in c && typeof c.props?.children === 'string') {
-            return c.props.children;
-          }
-          return '';
-        })
-        .filter(Boolean)
-        .join('')
-        .trim();
+  // Helper to extract text from React children (recursively)
+  const extractText = (node: any): string => {
+    if (typeof node === 'string') return node;
+    if (typeof node === 'number') return String(node);
+    if (Array.isArray(node)) return node.map(extractText).join('');
+    if (node && typeof node === 'object' && 'props' in node) {
+       return extractText(node.props.children);
     }
+    return '';
+  };
+
+  // For Mermaid diagrams
+  if (className === 'mermaid' || language === 'mermaid') {
+    // Try to extract mermaid code from children
+    let mermaidCode = extractText(children).trim();
 
     if (mermaidCode) {
       return <MermaidDiagram code={mermaidCode} />;
