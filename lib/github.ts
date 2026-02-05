@@ -43,12 +43,17 @@ export async function getOrganizationRepositories(): Promise<Repository[]> {
       per_page: 100,
       sort: 'updated',
     });
-    return response.data.map((repo: any) => ({
-      name: repo.name,
-      description: repo.description,
-      full_name: repo.full_name,
-      default_branch: repo.default_branch || 'main',
-    }));
+    return response.data
+      .filter((repo: any) => repo.visibility === 'public' || !repo.visibility)
+      .filter((repo: any) => !repo.fork)
+      .filter((repo: any) => !repo.name.startsWith('.'))
+      .filter((repo: any) => !repo.name.includes('license', 1))
+      .map((repo: any) => ({
+        name: repo.name,
+        description: repo.description,
+        full_name: repo.full_name,
+        default_branch: repo.default_branch || 'main',
+      }));
   } catch (error) {
     console.error('Error fetching organization repositories:', error);
     return [];
