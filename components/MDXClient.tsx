@@ -11,6 +11,82 @@ interface MDXClientProps {
   skipFirstHeading?: boolean;
 }
 
+function MermaidDiagram({ code }: { code: string }) {
+  const [svg, setSvg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || !code) return;
+
+    const renderMermaid = async () => {
+      try {
+        const mermaid = (await import('mermaid')).default;
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'base',
+          themeVariables: {
+            primaryColor: '#3b82f6',
+            primaryTextColor: '#fff',
+            primaryBorderColor: '#2563eb',
+            lineColor: '#60a5fa',
+            secondaryColor: '#1e40af',
+            tertiaryColor: '#1d4ed8',
+          },
+          securityLevel: 'loose',
+        });
+
+        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+        const { svg } = await mermaid.render(id, code);
+        setSvg(svg);
+      } catch (err) {
+        console.error('Mermaid render error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to render diagram');
+      }
+    };
+
+    renderMermaid();
+  }, [code, isClient]);
+
+  if (error) {
+    return (
+      <div className="mermaid-fallback my-8 p-4 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-3 text-yellow-600 dark:text-yellow-400">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span className="font-medium">Diagram Preview Unavailable</span>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Unable to render the Mermaid diagram. View the source code below:
+        </p>
+        <pre className="bg-gray-900 dark:bg-gray-950 p-3 rounded text-xs text-gray-300 overflow-x-auto">
+          <code>{code}</code>
+        </pre>
+      </div>
+    );
+  }
+
+  if (!svg) {
+    return (
+      <div className="mermaid-loading my-8 p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="mermaid-rendered my-8 overflow-x-auto flex justify-center"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+}
+
 // Component for rendering code blocks with ASCII art support and copy functionality
 function CodeBlock({ children, className, ...props }: React.HTMLAttributes<HTMLPreElement>) {
   const [copied, setCopied] = useState(false);
@@ -39,12 +115,34 @@ function CodeBlock({ children, className, ...props }: React.HTMLAttributes<HTMLP
   const language = (props as any)['data-language'] || '';
   const filename = (props as any)['data-rehype-pretty-code-title'] || '';
 
-  // For Mermaid diagrams, rehype-mermaid transforms them into img or svg
-  // If children is an object and looks like Mermaid output, we just render it
+  // For Mermaid diagrams
   if (className === 'mermaid') {
+    // Try to extract mermaid code from children
+    let mermaidCode = '';
+    if (typeof children === 'string') {
+      mermaidCode = children.trim();
+    } else if (typeof children === 'object' && children !== null) {
+      const childArray = Array.isArray(children) ? children : [children];
+      mermaidCode = childArray
+        .map(c => {
+          if (typeof c === 'string') return c;
+          if (typeof c === 'object' && 'props' in c && typeof c.props?.children === 'string') {
+            return c.props.children;
+          }
+          return '';
+        })
+        .filter(Boolean)
+        .join('')
+        .trim();
+    }
+
+    if (mermaidCode) {
+      return <MermaidDiagram code={mermaidCode} />;
+    }
+
     return (
-      <div className="mermaid-container my-8 overflow-x-auto flex justify-center bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        {children}
+      <div className="mermaid-error my-8 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <p className="text-red-600 dark:text-red-400 text-sm">Unable to parse Mermaid diagram code</p>
       </div>
     );
   }

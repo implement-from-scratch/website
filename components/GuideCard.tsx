@@ -34,7 +34,8 @@ export default function GuideCard({ repo }: GuideCardProps) {
   return (
     <Link
       href={`/${repo.name}`}
-      className="group relative block p-6 rounded-xl bg-white dark:bg-[#171717] border border-gray-200 dark:border-[#262626] hover:border-gray-300 dark:hover:border-[#404040] transition-all duration-200 hover:shadow-xl hover:shadow-black/20"
+      className="group relative block p-4 sm:p-6 rounded-xl bg-white dark:bg-[#171717] border border-gray-200 dark:border-[#262626] hover:border-gray-300 dark:hover:border-[#404040] transition-all duration-200 hover:shadow-xl hover:shadow-black/20 h-full"
+      style={{ minHeight: '140px' }}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2 flex-wrap">

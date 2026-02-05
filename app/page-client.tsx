@@ -43,15 +43,15 @@ export default function HomePageClient({ repos }: HomePageClientProps) {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-12">
-        <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-3">Implementation Guides</h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
+      <div className="mb-8 md:mb-12">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-3">Implementation Guides</h1>
+        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400">
           Select a guide to start implementing.
         </p>
       </div>
 
-      <div className="mb-8">
-        <div className="relative mb-6">
+      <div className="mb-8 space-y-4">
+        <div className="relative">
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -62,21 +62,23 @@ export default function HomePageClient({ repos }: HomePageClientProps) {
             placeholder="Search guides, tags..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-[#171717] border border-gray-200 dark:border-[#262626] rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-[#404040] transition-colors"
+            className="w-full pl-12 pr-4 py-3.5 md:py-3 bg-gray-50 dark:bg-[#171717] border border-gray-200 dark:border-[#262626] rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-[#404040] transition-colors touch-manipulation"
+            style={{ minHeight: '52px' }}
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-sm text-gray-600 dark:text-gray-400">Filter by:</span>
           {availableFilters.map((filter) => (
             <button
               key={filter}
               onClick={() => setSelectedFilter(selectedFilter === filter ? null : filter)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm font-medium transition-colors touch-manipulation ${
                 selectedFilter === filter
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 dark:bg-[#171717] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#262626] hover:border-gray-300 dark:hover:border-[#404040]'
               }`}
+              style={{ minHeight: '36px' }}
             >
               {filter}
             </button>
@@ -84,7 +86,7 @@ export default function HomePageClient({ repos }: HomePageClientProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredRepos.map((repo) => (
           <GuideCard key={repo.name} repo={repo} />
         ))}
